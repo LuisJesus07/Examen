@@ -1,165 +1,114 @@
 const btn = document.querySelector('#btn-revanadas')
-var inputRevandas = document.querySelector('#revanadas')
-let revanadas = 0
 
-
-
-var r;		//radio
-var angle 
-var step  //ditancia entre pasos en radianes
-
-//guarda los puntos x,y
-let pointsDDA = []
-let pointsBresenham = []
-let pointsEcuapp = []
+var mitadW,mitadH
 
 
 function setup() {
 	createCanvas(windowWidth, 300)
-  	angle = 0;
-  	step  = 0; 
+
+  	mitadW=windowWidth/2
+  	mitadH=windowHeight/2
 }
 
 function draw() {
 
+    stroke('#f6b439')
+	strokeWeight(3)
+	let c = color('#fdf6c2')
+	fill(c)
+
+    ellipse(200,150,150,150)
+    ellipse(mitadW, 150, 150, 150)
+    ellipse(windowWidth-200,150,150,150)
+    noLoop()
+
 }
 
 btn.addEventListener('click', function(){
-
-
-	if(inputRevandas.value % 2 == 0){
-		clear()
-		dividirPizza(270,100,180,180,'dda')
-		dividirPizza(350,0,180,180,'bresenham')
-		dividirPizza(430,0,180,180,'ecuapp')
-	}else{
-		alert("Ingrese un numero par")
-	}
+	
+	dividirPizza()
 	
 })
 
-function dividirPizza(ell_x,ell_y,w,h,algoritmo){
 
-	//obtener cantidad de revanadas
-	revanadas = inputRevandas.value
+function dividirPizza(){
 
-	//dibujar pizzas
-	stroke('#f6b439')
-	strokeWeight(8)
-	let c = color('#fdf6c2')
-	fill(c)
-	ellipse(ell_x,ell_y,w,h)
-	
+	  revanadas = parseInt(document.getElementById("revanadas").value);
 
-	step = TWO_PI/revanadas
+	  if(revanadas>1)
+	  {
 
-	//reiniciar angle
-	angle = 0
-	//limpiar arreglo de puntos
-	pointsBresenham.splice(0,pointsBresenham.length)
-	pointsEcuapp.splice(0,pointsEcuapp.length)
-	pointsDDA.splice(0,pointsDDA.length)
-	
-	//mover 0,0 al centro del circulo
- 	translate(ell_x, ell_y);
+	   
+	    let radio=75;
+	    let grados=360/revanadas
+	    let aux=grados;
 
- 	//obtener el radio 
- 	r = w/2
+		let xCp1 = windowWidth-200
+		let xCp2=  200
+		let xCp3 = mitadW
 
-	for(let i = 1; i<=revanadas; i++){
+		let yCentro = 150		
+
+		draw()
+
+	    while(grados<=360){
+	     
+	      
+	      let x2=radio*Math.cos(grados* Math.PI / 180)
+	      let y2=radio*Math.sin(grados * Math.PI / 180)
+
+
+		  let x2P1=xCp1+x2;
+		  let x2P2 = xCp2 + x2
+		  let x2P3 = xCp3 + x2;
+		  y2=yCentro+y2;
 		  
-		//convertir cordenadas polares a cordenadas cartesianas
-		var x = floor(r * sin(angle));
-		var y = floor(r * cos(angle));
-
-		//guardar punto
-		let punto = {x,y}
-
-		//guardar punto en el array(de cada pizza)
-		switch(algoritmo){
-			case 'dda':
-					pointsDDA.push(punto)
-				break;
-			case 'bresenham':
-					pointsBresenham.push(punto)
-				break;
-			case 'ecuapp':
-					pointsEcuapp.push(punto)
-				break;
-		}
+		  x2P1=floor(x2P1)
+		  x2P2=floor(x2P2)
+		  x2P3 = floor(x2P3)
+		  y2=floor(y2)
 		  
-		//ellipse(x, y, 30);
-		  
-		//incrementar angulo 
-		angle+= step;
+		  ecuapp(xCp1,yCentro,x2P1,y2);
+		  dda(xCp2,yCentro,x2P2,y2)
+		  bresenham(xCp3,yCentro,x2P3,y2)
+	        
+	      grados+=aux;
 
-	}
+	    } 
 
-	let puntoInicio = revanadas/2
-	let puntoFin = 0
 
-	stroke('black');
-	strokeWeight(1)
+	  }
 
-	for(let i=1; i<=revanadas/2;i++){
-
-		switch(algoritmo){
-			case 'dda':
-					dda(pointsDDA[puntoInicio],pointsDDA[puntoFin])
-				break;
-			case 'bresenham':
-					bresenham(pointsBresenham[puntoInicio],pointsBresenham[puntoFin])
-				break;
-			case 'ecuapp':
-					ecuapp(pointsEcuapp[puntoInicio],pointsEcuapp[puntoFin])
-				break;
-		}
-
-		puntoInicio++
-		puntoFin++
-
-	}
-
-	
 
 }
 
-function dda(p1, p2){
+function dda(x1, y1, x2, y2){
 
-	let lim
-	let xi
-	let yi
-	let x
-	let y
+	  let dx=x2-x1
+	  let dy=y2-y1
 
-	const dx = round(p2.x - p1.x)
-	const dy = round(p2.y - p1.y)
+	  let limite
+	  if(Math.abs(dx)>Math.abs(dy))
+	    limite=Math.abs(dx)
+	  else
+	    limite=Math.abs(dy)
 
-	if(round(dx) > round(dy)){
-		lim = round(dx)
-	}else{
-		lim = round(dy)
-	}
+	  let xi=dx/limite
+	  let yi=dy/limite
 
-	xi = dx/lim
-	yi = dy/lim
-
-	x = p1.x
-	y = p1.y
-
-	let i = 0
-
-	while(i < lim){
-		point(x,y)
-		x += xi
-		y += yi 
-
-		i++
-	}
+	  let x=x1
+	  let y= y1
+	  
+	  for(let i=0;i<limite;i++)
+	  {
+	    point(x, y)
+	    x+=xi
+	    y+=yi
+	  }
 
 }
 
-function bresenham(p1, p2){
+function bresenham(x1, y1, x2, y2){
 	
 	let pasoY
 	let pasoX
@@ -169,8 +118,8 @@ function bresenham(p1, p2){
 	let incE
 	let incNE
 
-	let dx = p2.x - p1.x
-	let dy = p2.y - p1.y
+	let dx = x2 - x1
+	let dy = y2 - y1
 
 
 	if(dy < 0) {
@@ -187,8 +136,8 @@ function bresenham(p1, p2){
 		pasoX = 1
 	}
 
-	x = p1.x
-	y = p1.y
+	x = x1
+	y = y1
 	
 	point(x,y)
 
@@ -200,7 +149,7 @@ function bresenham(p1, p2){
 		incE = 2 * dy
 		incNE = 2 * (dy - dx)
 
-		while(x != p2.x) {
+		while(x != x2) {
 			x += pasoX
 
 			if(p < 0) {
@@ -219,7 +168,7 @@ function bresenham(p1, p2){
 		incE = 2 * dx
 		incNE = 2 * (dx - dy)
 
-		while(y != p2.y) {
+		while(y != y2) {
 			y += pasoY
 
 			if(p < 0) {
@@ -238,42 +187,60 @@ function bresenham(p1, p2){
 	
 }
 
-function ecuapp(p1, p2){
+function ecuapp(x1, y1, x2, y2){
 
-	const dx = p2.x - p1.x
-	const dy = p2.y - p1.y
+	if(x2<x1)
+	{
+		let aux=x2;
+		x2=x1;
+		x1=aux
+
+		aux = y2
+		y2=y1
+		y1=aux
+	}
+
+	const dx = x2 - x1
+	const dy = y2 - y1
 
 	const m = dy / dx
-	const b = p1.y - m * p1.x
+	const b = y1 - (m * x1)
 
-	point(p1.x, p1.y)
 	
-	let x = p1.x + 1
+	point( x1, y1 )
+
+
+	if(x1===x2){
 	
-	let y 
-	while(x != p2.x){
-
-		y = m * x + b
-
-		point(x, y)
-
-		//si la x de p2 es mayor a la x de p1 amuentar x
-		if(p2.x > p1.x){
-			x++
-		}else{
-			x--
+		if(y1>y2)
+		{
+			let aux=y1;
+			y1=y2;
+			y2=aux
 		}
-
-	}
-
-	//si las x de p1 y p2 estan en la misma posicion diminuir y
-	if(p1.x == p2.x){
-		y = p1.y 
-		while(y != p2.y){
-			point(x, y)
+		let y = y1 + 1
+		while(y!=y2)
+		{
+			point(x1,y)
 			y++
 		}
+
 	}
+	else{
+
+		
+		
+		let x = x1+ 1
+		let y = m * x + b
+		
+		while(x !=x2){
+			y = m * x + b
+			y = floor(y)
+			point(x, y)
+			x++
+		}
+  }
+  
 
 
 }
